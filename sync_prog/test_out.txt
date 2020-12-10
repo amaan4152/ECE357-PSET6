@@ -1,0 +1,71 @@
+OUTPUT:
+    When there is no spinlock applied to the critical region in the child process, overwritting occurs and 
+    the final output is not the same as the true file output. 
+
+    The final output if working properly has to be 400000 because there are 4 child processes and each are 
+    iterating 100000 times
+    
+    Some regions have been spotted like here without spin_lock(): 
+
+    Without spin_lock():        
+    
+            VALUE: 2040
+            VALUE: 2041
+            VALUE: 2042
+            VALUE: 2043
+            VALUE: 2044
+            VALUE: 2047
+            VALUE: 2048
+            VALUE: 2050
+            VALUE: 2051
+            VALUE: 2052
+            VALUE: 2053
+            VALUE: 2054
+            VALUE: 2055
+            VALUE: 2056
+            VALUE: 2057
+    FINAL OUTPUT: FINAL: 399949
+
+TRUTH:
+            VALUE: 2040
+            VALUE: 2041
+            VALUE: 2042
+            VALUE: 2043
+            VALUE: 2044
+            VALUE: 2045
+            VALUE: 2046
+            VALUE: 2047
+            VALUE: 2048
+            VALUE: 2049
+            VALUE: 2050
+            VALUE: 2051
+            VALUE: 2052
+            VALUE: 2053
+            VALUE: 2054
+            VALUE: 2055
+            VALUE: 2056
+            VALUE: 2057
+
+    FINAL OUTPUT: VALUE: 400000
+
+
+WITH spin_lock():
+        VALUE: 2240
+        VALUE: 2241
+        VALUE: 2242
+        VALUE: 2243
+        VALUE: 2244
+        VALUE: 2245
+        VALUE: 2246
+        VALUE: 2247
+        VALUE: 2248
+        VALUE: 2249
+        VALUE: 2250
+        VALUE: 2251
+        VALUE: 2252
+        VALUE: 2253
+        VALUE: 2254
+        VALUE: 2255
+        VALUE: 2256
+        VALUE: 2257
+    FINAL OUTPUT: FINAL: 400000
