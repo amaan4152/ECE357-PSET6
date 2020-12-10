@@ -38,7 +38,7 @@ int main(void)
             exit(EXIT_FAILURE);
         case 0:
 
-            for (unsigned long j = 0; j < 1000; ++j)
+            for (unsigned long j = 0; j < 10000; ++j)
             {
                 my_procnum = i;
                 switch(i)

@@ -21,7 +21,7 @@ void sem_init(_sem *s, int count)
 
 void handler(int signum) //dummy handler
 {
-    //fprintf(stderr, "~~~~~>IN SIGNAL HANDLER!\n");
+    fprintf(stderr, "~~~~~>IN SIGNAL HANDLER!\n");
     return;
 }
 
@@ -29,11 +29,11 @@ void handler(int signum) //dummy handler
 void sem_wait(_sem *s)
 {   
     //METHOD A
-    for(;;)         
+    sigset_t mask, mask_set;
+    signal(SIGUSR1, handler);
+    while(1)        
     {
         spin_lock(&s->mtx);
-        sigset_t mask, mask_set;
-        signal(SIGUSR1, handler);
         sigemptyset(&mask_set);
         sigaddset(&mask_set, SIGUSR1);
         if(s->rec_count > 0)
@@ -43,14 +43,16 @@ void sem_wait(_sem *s)
             spin_unlock(&s->mtx);
             return;
         }
-        else
-        {
-            sigprocmask(SIG_BLOCK, &mask_set, &mask);
-            s->waitlist[my_procnum] = getpid();
-            sigemptyset(&mask);
-            spin_unlock(&s->mtx);
-            sigsuspend(&mask);            
-        }
+        
+        ++s->b_count;
+        sigprocmask(SIG_BLOCK, &mask_set, &mask);
+        s->waitlist[my_procnum] = getpid();
+        fprintf(stderr, "D00\n");
+        sigemptyset(&mask);
+        spin_unlock(&s->mtx);
+        sigsuspend(&mask);
+        
+        fprintf(stderr, "D01 | PID: %u RECIEVED SIGUSR1 | PROC_NUM: %d\n", getpid(), my_procnum);
     }
 }
 
@@ -63,7 +65,7 @@ void sem_inc(_sem *s)
     {
         if(s->waitlist[i])
         {
-            //printf("KILLING TO PROCESS: %u!\n", s->waitlist[i]); //debug statement
+            //fprintf(stderr, "KILLING TO PROCESS: %u!\n", s->waitlist[i]); //debug statement
             if(kill(s->waitlist[i], SIGUSR1) == -1)
             {
                 fprintf(stderr, "Error sending signal to proc: %u\nERROR: %s\n", s->waitlist[i], strerror(errno));
