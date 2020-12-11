@@ -38,7 +38,6 @@ void sem_wait(_sem *s)
         sigaddset(&mask, SIGUSR1);
         sigprocmask(SIG_BLOCK, &mask, &old_mask);
         s->waitlist[my_procnum] = getpid();
-        //fprintf(stderr, "[P: %d] D00\n", my_procnum);
         spin_unlock(&s->mtx);
         signal(SIGUSR1, handler);
         sigemptyset(&mask);

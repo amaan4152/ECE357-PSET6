@@ -67,13 +67,12 @@ int main(void)
             exit(EXIT_FAILURE);
         }
     } 
-    int diff_count = 0;
+    int diff_count[N_PROC-1];
+    memset(diff_count, 0, N_PROC-1);
     fprintf(stderr, "FINAL:\n");
     for(int i = 0; i < N_ITR*(N_PROC-1); ++i)
     {
-        if(!(f->w_data[i] - f->r_data[i]))
-            ++diff_count;
-        int p_num = f->r_data[i] & UCHAR_MAX; 
+        int p_num = f->r_data[i] & UCHAR_MAX;   //process number
         unsigned long datum = f->r_data[i] >> 8;
         fprintf(stderr, "[P%d] READ: %lu\n", p_num, datum);
     }

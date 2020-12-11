@@ -54,7 +54,7 @@ void fifo_wr(_FIFO *f, unsigned long d)
 unsigned long fifo_rd(_FIFO *f)
 {
     //spin_lock(&f->f_mtx);
-    sem_wait(&f->full);
+    //sem_wait(&f->full);
     spin_lock(&f->lck);
     //fprintf(stderr, "[P%d] FULL\n", my_procnum);
     unsigned long data = f->fifo_buf[f->r_index++];
