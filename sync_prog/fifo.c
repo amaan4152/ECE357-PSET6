@@ -10,16 +10,17 @@ Notes:
 */
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "fifo.h"
 
 void fifo_init(_FIFO *f)
 {
-    sem_init(&f->cons, 1);
-    sem_init(&f->prod, 9);
-    f->item_count = 0; 
+    sem_init(&f->empty, MYFIFO_BUFSIZ);
+    sem_init(&f->full, 0);
     f->w_index = 0;
     f->r_index = 0;
-    f->f_mtx.spinlock = 0;
+    f->lck = 0;
+    memset(f->fifo_buf, 0, MYFIFO_BUFSIZ);
 }
 
 /*
@@ -37,33 +38,28 @@ void fifo_init(_FIFO *f)
 */
 void fifo_wr(_FIFO *f, unsigned long d)
 {
-    if(f->item_count >= MYFIFO_BUFSIZ)   //full
-    {
-        //printf("FULL!\n");
-        sem_wait(&f->prod); //block producer till data struct has a free slot
-    }
-    spin_lock(&f->f_mtx);
+    //spin_lock(&f->f_mtx);
+    sem_wait(&f->empty);
+    spin_lock(&f->lck);
+    //fprintf(stderr, "[P%d] EMPTY\n", my_procnum);
     f->fifo_buf[f->w_index++] = d;
     f->w_index %= MYFIFO_BUFSIZ;    //for reseting the index once incrementing past buffer size bound
-    ++f->item_count;
-    spin_unlock(&f->f_mtx);
-    sem_inc(&f->cons);  //let consumer now read the updated data structure after writing
+    spin_unlock(&f->lck);
+    sem_inc(&f->full);  //let consumer now read the updated data structure after writing
+    //fprintf(stderr, "[P%d] ADDED DATA\n", my_procnum);
 }
 
 unsigned long fifo_rd(_FIFO *f)
 {
-    unsigned long data;
-    if(f->item_count <= 0)  //empty
-    {
-        //printf("EMPTY!\n");
-        sem_wait(&f->cons); //block consumer till producer has written something to data structure
-    }
-    spin_lock(&f->f_mtx);
-    data = f->fifo_buf[f->r_index++];
+    //spin_lock(&f->f_mtx);
+    sem_wait(&f->full);
+    spin_lock(&f->lck);
+    //fprintf(stderr, "[P%d] FULL\n", my_procnum);
+    unsigned long data = f->fifo_buf[f->r_index++];
     f->r_index %= MYFIFO_BUFSIZ;
-    --f->item_count;
-    spin_unlock(&f->f_mtx);
-    sem_inc(&f->prod);  //let producer now write data to data structure after reading
+    spin_unlock(&f->lck);
+    sem_inc(&f->empty);  //let producer now write data to data structure after reading
+    //fprintf(stderr, "[P%d] READ DATA\n", my_procnum);
     //printf("DATA: %lu\n", data);
     return data;
 }

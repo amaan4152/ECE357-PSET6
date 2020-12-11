@@ -4,18 +4,12 @@
 #include "tas.h"
 #include "spin_lock.h"
 
-void spin_lock(struct mutex *m)
+void spin_lock(volatile char *lck)
 {
-    while(tas(&m->spinlock))
-    {
-        //printf("SPINNING...\n");
-        sched_yield();
-    }
+    while(tas(lck)) sched_yield();
 }
 
-void spin_unlock(struct mutex *m)
+void spin_unlock(volatile char *lck)
 {
-    m->spinlock=0;
-    //after unlock  
-    //sched_yield();
+    *lck=0;
 }

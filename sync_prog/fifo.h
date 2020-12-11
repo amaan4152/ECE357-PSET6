@@ -7,11 +7,10 @@
 
 typedef struct fifo
 {
-    _sem cons; //semaphore for consumer process (reader)
-    _sem prod; //semapore for producer process (writer)
-    struct mutex f_mtx;
+    _sem empty, full; 
+    volatile char lck;
     unsigned long fifo_buf[MYFIFO_BUFSIZ], r_data[N_ITR], w_data[N_ITR];
-    int item_count, w_index, r_index; 
+    int w_index, r_index; 
 }_FIFO;
 
 void fifo_init(_FIFO *);

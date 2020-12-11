@@ -14,8 +14,10 @@
     procnum = 0 => producer
     procnum = 1 => consumer
 */
+int my_procnum = 0;
+
 static int procnum[2] = {0, 1};
-static _FIFO *f;
+static struct fifo *f;
 
 void* mem_creat(size_t);
 
@@ -29,39 +31,30 @@ int main(void)
 
     for (int i = 0; i < N_PROC; ++i)
     {
-        my_procnum = i;
         switch (pid = fork())
         {
             case -1:
                 fprintf(stderr, "Fork error: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             case 0:
-                
-                for(unsigned long j = 0; j < N_ITR; ++j)
+                if(i == 0)
                 {
-                    if(procnum[i])
+                    for(int j = 0; j < N_ITR; ++j)
                     {
-                        my_procnum = procnum[1];
                         unsigned long r_datum = fifo_rd(f);
-                        f->r_data[j] = r_datum;
+                        f->r_data[i] = r_datum; 
                     }
-                    else
+                }
+                else
+                {
+                    my_procnum = i;
+                    for(int j = 0; j < N_ITR; ++j)
                     {
-                        my_procnum = procnum[0];
                         unsigned long w_datum = rand();
                         f->w_data[j] = w_datum;
                         fifo_wr(f, w_datum);
                     }
-                }
-                /*
-                if(i == 0)
-                {
-                    for(int j = 0; j < (N_ITR*(N_PROC-1)); ++j)
-                    {
-                        
-                    }
-                }   
-                */         
+                }    
                 exit(1);
         }
     }
@@ -79,7 +72,7 @@ int main(void)
     {
         if(!(f->w_data[i] - f->r_data[i]))
             ++diff_count;
-        fprintf(stderr, "WRITTEN: %lu  |  READ: %lu\n", f->w_data[i], f->r_data[i]);
+        //fprintf(stderr, "WRITTEN: %lu  |  READ: %lu\n", f->w_data[i], f->r_data[i]);
     }
     fprintf(stderr, "DIFF COUNT: %d\n", diff_count);
     if (munmap(f, sizeof(*f)) == -1)
