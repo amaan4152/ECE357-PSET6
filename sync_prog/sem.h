@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include "spin_lock.h"
 
-#define N_PROC 3
+#define N_PROC 64
 
 extern int my_procnum;
 

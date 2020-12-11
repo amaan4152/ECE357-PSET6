@@ -42,10 +42,12 @@ void fifo_wr(_FIFO *f, unsigned long d)
     sem_wait(&f->empty);
     spin_lock(&f->lck);
     //fprintf(stderr, "[P%d] EMPTY\n", my_procnum);
+    d <<= 8; 
+    d |= my_procnum;
     f->fifo_buf[f->w_index++] = d;
     f->w_index %= MYFIFO_BUFSIZ;    //for reseting the index once incrementing past buffer size bound
-    spin_unlock(&f->lck);
     sem_inc(&f->full);  //let consumer now read the updated data structure after writing
+    spin_unlock(&f->lck);
     //fprintf(stderr, "[P%d] ADDED DATA\n", my_procnum);
 }
 
@@ -57,9 +59,8 @@ unsigned long fifo_rd(_FIFO *f)
     //fprintf(stderr, "[P%d] FULL\n", my_procnum);
     unsigned long data = f->fifo_buf[f->r_index++];
     f->r_index %= MYFIFO_BUFSIZ;
-    spin_unlock(&f->lck);
     sem_inc(&f->empty);  //let producer now write data to data structure after reading
-    //fprintf(stderr, "[P%d] READ DATA\n", my_procnum);
+    spin_unlock(&f->lck);
     //printf("DATA: %lu\n", data);
     return data;
 }

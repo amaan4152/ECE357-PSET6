@@ -9,7 +9,7 @@ typedef struct fifo
 {
     _sem empty, full; 
     volatile char lck;
-    unsigned long fifo_buf[MYFIFO_BUFSIZ], r_data[N_ITR], w_data[N_ITR];
+    unsigned long fifo_buf[MYFIFO_BUFSIZ], r_data[N_ITR * (N_PROC - 1)], w_data[N_ITR * (N_PROC - 1)];
     int w_index, r_index; 
 }_FIFO;
 

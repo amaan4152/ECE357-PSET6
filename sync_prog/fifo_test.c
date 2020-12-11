@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
@@ -24,7 +25,7 @@ void* mem_creat(size_t);
 int main(void)
 {
     pid_t pid;
-    srand(time(NULL));
+    //srand(time(NULL));
 
     f = mem_creat(sizeof(*f));
     fifo_init(f);
@@ -37,22 +38,22 @@ int main(void)
                 fprintf(stderr, "Fork error: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             case 0:
-                if(i == 0)
+                if(!i) //i = 0 => consumer process
                 {
-                    for(int j = 0; j < N_ITR; ++j)
+                    for(unsigned long j = 0; j < N_ITR*(N_PROC-1); ++j)
                     {
                         unsigned long r_datum = fifo_rd(f);
-                        f->r_data[i] = r_datum; 
+                        f->r_data[j] = r_datum; 
                     }
                 }
-                else
+                else // 0 < i < N_PROC => producer processes
                 {
                     my_procnum = i;
-                    for(int j = 0; j < N_ITR; ++j)
+                    for(unsigned long j = 0; j < N_ITR; ++j)
                     {
-                        unsigned long w_datum = rand();
-                        f->w_data[j] = w_datum;
-                        fifo_wr(f, w_datum);
+                        //unsigned long w_datum = rand();
+                        f->w_data[(N_ITR*(i-1))+j] = j;
+                        fifo_wr(f, j);
                     }
                 }    
                 exit(1);
@@ -68,13 +69,15 @@ int main(void)
     } 
     int diff_count = 0;
     fprintf(stderr, "FINAL:\n");
-    for(int i = 0; i < N_ITR; ++i)
+    for(int i = 0; i < N_ITR*(N_PROC-1); ++i)
     {
         if(!(f->w_data[i] - f->r_data[i]))
             ++diff_count;
-        //fprintf(stderr, "WRITTEN: %lu  |  READ: %lu\n", f->w_data[i], f->r_data[i]);
+        int p_num = f->r_data[i] & UCHAR_MAX; 
+        unsigned long datum = f->r_data[i] >> 8;
+        fprintf(stderr, "[P%d] READ: %lu\n", p_num, datum);
     }
-    fprintf(stderr, "DIFF COUNT: %d\n", diff_count);
+    //fprintf(stderr, "DIFF COUNT: %d\n", diff_count);
     if (munmap(f, sizeof(*f)) == -1)
     {
         fprintf(stderr, "Error unmapping virtual mem space: %s", strerror(errno));
