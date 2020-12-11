@@ -67,16 +67,19 @@ int main(void)
             exit(EXIT_FAILURE);
         }
     } 
-    int diff_count[N_PROC-1];
-    memset(diff_count, 0, N_PROC-1);
+    int fin_num_correc = 0; 
     fprintf(stderr, "FINAL:\n");
     for(int i = 0; i < N_ITR*(N_PROC-1); ++i)
     {
         int p_num = f->r_data[i] & UCHAR_MAX;   //process number
         unsigned long datum = f->r_data[i] >> 8;
+        if(datum == (N_ITR-1))
+            ++fin_num_correc;
         fprintf(stderr, "[P%d] READ: %lu\n", p_num, datum);
     }
-    //fprintf(stderr, "DIFF COUNT: %d\n", diff_count);
+    fprintf(stderr, "TOTAL CORRECT FINAL VAL COUNT: %d\n", fin_num_correc);
+    if(fin_num_correc == N_PROC-1)
+        fprintf(stderr, "WRITTEN AND READ PERFECT MATCH!\n");
     if (munmap(f, sizeof(*f)) == -1)
     {
         fprintf(stderr, "Error unmapping virtual mem space: %s", strerror(errno));

@@ -3,7 +3,7 @@
 #include "sem.h"
 
 #define MYFIFO_BUFSIZ 4096
-#define N_ITR 1000
+#define N_ITR 200
 
 typedef struct fifo
 {
