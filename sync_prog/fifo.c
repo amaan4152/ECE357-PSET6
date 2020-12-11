@@ -26,9 +26,9 @@ void fifo_init(_FIFO *f)
 
 void fifo_wr(_FIFO *f, unsigned long d)
 {
-    //sem_wait(&f->empty);
+    sem_wait(&f->empty);
     spin_lock(&f->lck);
-    d <<= 8;    //shit by 8bits to the left to hold process number
+    d <<= 8;    //shift by 8bits to the left to hold process number
     d |= my_procnum;
     f->fifo_buf[f->w_index++] = d;
     f->w_index %= MYFIFO_BUFSIZ;    //for reseting the index once incrementing past buffer size bound
